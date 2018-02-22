@@ -15,7 +15,7 @@ const createEvaluations = (token) => {
       .set('Authorization', `Bearer ${token}`)
       .send(evaluation)
       .then((res) => {
-        console.log('Evaluations seeded', res.body.title)
+        console.log('Evaluations seeded', res.body)
       })
       .catch((err) => {
         console.error('Error seeding evaluation!', err)
@@ -30,7 +30,7 @@ const createStudents = (token) => {
       .set('Authorization', `Bearer ${token}`)
       .send(student)
       .then((res) => {
-        console.log('Student seeded...', res.body.title)
+        console.log('Students seeded...', res.body.name)
       })
       .catch((err) => {
         console.error('Error seeding student!', err)
@@ -45,7 +45,7 @@ const createBatches = (token) => {
       .set('Authorization', `Bearer ${token}`)
       .send(batch)
       .then((res) => {
-        console.log('Batch seeded...', res.body.title)
+        console.log('Batches seeded...', res.body.number)
       })
       .catch((err) => {
         console.error('Error seeding batch!', err)
@@ -59,7 +59,11 @@ const authenticate = (email, password) => {
     .send({ email, password })
     .then((res) => {
       console.log('Authenticated!')
-      return createEvaluations(res.body.token)
+      console.log('Token: ', res.body.token)
+
+      createBatches(res.body.token)
+      createStudents(res.body.token)
+      createEvaluations(res.body.token)
     })
     .catch((err) => {
       console.error('Failed to authenticate!', err.message)
@@ -69,8 +73,8 @@ const authenticate = (email, password) => {
 request
   .post(createUrl('/users'))
   .send(user)
-  .then(() => {
-    console.log('User created!')
+  .then((res) => {
+    console.log('User created: ', res.body.name)
     return authenticate(user.email, user.password)
   })
   .catch((err) => {

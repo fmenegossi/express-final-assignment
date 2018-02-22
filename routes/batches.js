@@ -1,5 +1,6 @@
-const { Batch } = require('../models')
 const router = require('express').Router()
+const { Batch } = require('../models')
+const { Student } = require('../models')
 const passport = require('../config/auth')
 const authenticate = passport.authorize('jwt', { session: false })
 
@@ -21,14 +22,30 @@ module.exports = io => {
         })
         .catch((error) => next(error))
     })
-    .post('/batches', authenticate, (req, res, next) => {
-      const { name, photo } = req.body
-      const newStudent = {
-        name: name,
-        photo: photo
-      }
+    .get('/batches/:id/students', (req, res, next) => {
+      const id = req.params.id
 
-      Batch.create(newStudent)
+      Batch.findById(id)
+        .then((batch) => {
+          if (!batch) { return next() }
+
+          Student.find({
+            '_id': { $in: batch.students }
+          },
+          (err, students) => {
+            io.emit('action', {
+              type: 'BATCH_STUDENTS_FETCHED',
+              payload: students
+            })
+            res.json(students)
+          })
+        })
+        .catch((error) => next(error))
+    })
+    .post('/batches', authenticate, (req, res, next) => {
+      const newBatch = req.body
+
+      Batch.create(newBatch)
         .then((batch) => {
           io.emit('action', {
             type: 'BATCH_CREATED',
@@ -48,6 +65,7 @@ module.exports = io => {
 
           const batchUpdates = req.body
           const patchedBatch = {...batch, ...batchUpdates}
+          // console.log(patchedBatch)
 
           Batch.findByIdAndUpdate(id, { $set: patchedBatch }, { new: true })
             .then((batch) => {

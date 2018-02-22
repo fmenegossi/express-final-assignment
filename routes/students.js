@@ -8,7 +8,13 @@ module.exports = io => {
     .get('/students', (req, res, next) => {
       Student.find()
         .sort({ createdAt: -1 })
-        .then((students) => res.json(students))
+        .then((students) =>{
+          io.emit('action', {
+            type: 'FETCH_ALL_STUDENTS',
+            payload: students
+          })
+          res.json(students)
+        })
         .catch((error) => next(error))
     })
     .get('/students/:id', (req, res, next) => {
@@ -17,6 +23,10 @@ module.exports = io => {
       Student.findById(id)
         .then((student) => {
           if (!student) { return next() }
+          io.emit('action', {
+            type: 'FETCH_ONE_STUDENT',
+            payload: student
+          })
           res.json(student)
         })
         .catch((error) => next(error))
@@ -51,10 +61,10 @@ module.exports = io => {
 
           Student.findByIdAndUpdate(id, { $set: patchedStudent }, { new: true })
             .then((student) => {
-              io.emit('action', {
-                type: 'STUDENT_UPDATED',
-                payload: student
-              })
+              // io.emit('action', {
+              //   type: 'STUDENT_UPDATED',
+              //   payload: student
+              // })
               res.json(student)
             })
             .catch((error) => next(error))

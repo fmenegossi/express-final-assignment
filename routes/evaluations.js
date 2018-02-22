@@ -21,11 +21,28 @@ module.exports = io => {
         })
         .catch((error) => next(error))
     })
+    .get('/evaluations/student/:id', (req, res, next) => {
+      const id = req.params.id
+
+      Evaluation.find({studentId: id})
+        .sort({ date: 1 })
+        .then((evaluations) => {
+          io.emit('action', {
+            type: 'STUDENT_EVALUATIONS_FETCHED',
+            payload: evaluations
+          })
+          res.json(evaluations)
+        })
+        .catch((error) => next(error))
+    })
     .post('/evaluations', authenticate, (req, res, next) => {
-      const { name, photo } = req.body
+      const { date, color, remarks, userId, studentId } = req.body
       const newEvaluation = {
-        name: name,
-        photo: photo
+        date: date,
+        color: color,
+        remarks: remarks,
+        userId: userId,
+        studentId: studentId
       }
 
       Evaluation.create(newEvaluation)
