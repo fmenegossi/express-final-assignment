@@ -65,7 +65,6 @@ module.exports = io => {
 
           const batchUpdates = req.body
           const patchedBatch = {...batch, ...batchUpdates}
-          // console.log(patchedBatch)
 
           Batch.findByIdAndUpdate(id, { $set: patchedBatch }, { new: true })
             .then((batch) => {

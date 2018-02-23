@@ -62,7 +62,12 @@ module.exports = io => {
       Evaluation.findById(id)
         .then((evaluation) => {
           if (!evaluation) { return next() }
-          if(evaluation.userId !== userId) { return next() }
+
+          if(evaluation.userId !== userId) {
+            const err = new Error('You can only edit evaluations you did')
+            err.status = 422
+            return next(err)
+          }
 
           const evaluationUpdates = req.body
           const patchedEvaluation = {...evaluation, ...evaluationUpdates}
