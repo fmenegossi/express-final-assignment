@@ -16,7 +16,7 @@ module.exports = io => {
 
       Evaluation.findById(id)
         .then((evaluation) => {
-          if (!evaluation) { return next() }
+          if (!evaluation) { next() }
           res.json(evaluation)
         })
         .catch((error) => next(error))
@@ -45,6 +45,12 @@ module.exports = io => {
         studentId: studentId
       }
 
+      if(['red', 'yellow'].includes(color) && remarks.trim() === '') {
+        const error = new Error('You must provide your remarks to RED or YELLOW evals')
+        error.status = 422
+        next(error)
+      }
+
       Evaluation.create(newEvaluation)
         .then((evaluation) => {
           io.emit('action', {
@@ -61,16 +67,22 @@ module.exports = io => {
 
       Evaluation.findById(id)
         .then((evaluation) => {
-          if (!evaluation) { return next() }
+          if (!evaluation) { next() }
 
           if(evaluation.userId !== userId) {
-            const err = new Error('You can only edit evaluations you did')
-            err.status = 422
-            return next(err)
+            const error = new Error('You can only edit evaluations you did')
+            error.status = 422
+            next(error)
+          }
+
+          if(['red', 'yellow'].includes(color) && remarks.trim() === '') {
+            const error = new Error('You must provide your remarks to RED or YELLOW evals')
+            error.status = 422
+            next(error)
           }
 
           const evaluationUpdates = req.body
-          const patchedEvaluation = {...evaluation, ...evaluationUpdates}
+          const patchedEvaluation = { ...evaluation, ...evaluationUpdates }
 
           Evaluation.findByIdAndUpdate(id, { $set: patchedEvaluation }, { new: true })
             .then((evaluation) => {
